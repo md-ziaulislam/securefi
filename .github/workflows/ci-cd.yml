@@ -9,10 +9,10 @@ on:
 
 jobs:
   # ─────────────────────────────────────────────
-  # JOB 1: Run Tests
+  # JOB 1: Test & Build Assets
   # ─────────────────────────────────────────────
-  test:
-    name: ✅ Run Tests
+  build-and-test:
+    name: 🧪 Test & Build Assets
     runs-on: ubuntu-latest
 
     steps:
@@ -26,15 +26,33 @@ jobs:
           extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, bcmath, curl, zip, gd
           coverage: none
 
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
       - name: Cache Composer Dependencies
         uses: actions/cache@v4
         with:
           path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          key: ${{ runner.os }}-composer-dev-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-dev-
 
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-interaction --optimize-autoloader
+
+      - name: Install Node Dependencies & Build Assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload Built Assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-assets
+          path: public/build/
+          retention-days: 1
 
       - name: Copy Environment File
         run: |
@@ -61,44 +79,12 @@ jobs:
         run: php artisan test
 
   # ─────────────────────────────────────────────
-  # JOB 2: Build Frontend Assets
-  # ─────────────────────────────────────────────
-  build:
-    name: 🔨 Build Frontend Assets
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Node Dependencies
-        run: npm ci
-
-      - name: Build Production Assets
-        run: npm run build
-
-      - name: Upload Built Assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-assets
-          path: public/build/
-          retention-days: 1
-
-  # ─────────────────────────────────────────────
-  # JOB 3: Deploy to Production via FTP
+  # JOB 2: Deploy to Production via FTP
   # ─────────────────────────────────────────────
   deploy:
     name: 🚀 Deploy to Production (FTP)
     runs-on: ubuntu-latest
-    needs: [ test, build ]
+    needs: build-and-test
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
 
     steps:
@@ -111,18 +97,18 @@ jobs:
           name: production-assets
           path: public/build/
 
-      - name: Install Composer Dependencies (no-dev)
+      - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, bcmath, curl, zip, gd
 
-      - name: Cache Composer
+      - name: Cache Composer Dependencies (Production)
         uses: actions/cache@v4
         with:
           path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          key: ${{ runner.os }}-composer-prod-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-prod-
 
       - name: Install Production Composer Dependencies
         run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
@@ -133,10 +119,8 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          # Only upload changed files (incremental deploy = fast)
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '/' }}
           dangerous-clean-slate: false
-          # Exclude files that should NOT be uploaded to server
           exclude: |
             **/.git*
             **/.git*/**
@@ -157,6 +141,7 @@ jobs:
             **/Thumbs.db
             **/.DS_Store
             **/create_production_zip.php
+            **/*.ps1
 
       - name: Deployment Summary
         run: |
@@ -167,6 +152,6 @@ jobs:
           echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Deployed by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Site** | https://securofi.tech |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Server** | ${{ secrets.FTP_SERVER }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> ⚠️ Remember to run migrations manually via phpMyAdmin if schema changed." >> $GITHUB_STEP_SUMMARY
