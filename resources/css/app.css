@@ -1,0 +1,170 @@
+@import 'tailwindcss';
+
+[x-cloak] {
+    display: none !important;
+}
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-heading: var(--font-heading, 'Inter', sans-serif);
+    --font-body: var(--font-body, 'Inter', sans-serif);
+    --font-mono: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+/* Swiss Minimalist Base Typography and Layout tokens */
+body {
+    font-family: var(--font-body, 'Inter', sans-serif);
+    background-color: var(--color-secondary, #FFFFFF);
+    color: var(--color-primary, #111111);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading, 'Inter', sans-serif);
+    color: var(--color-primary, #111111);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+}
+
+code, pre, .font-mono {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+/* Swiss Minimalist Components */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary, #111111);
+    color: var(--color-secondary, #FFFFFF);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-base, 0px);
+    transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+}
+.btn-primary:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: var(--color-primary, #111111);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-base, 0px);
+    border: 1px solid var(--color-neutral, #808080);
+    transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    text-decoration: none;
+}
+.btn-secondary:hover {
+    background-color: var(--color-tertiary, #F5F1E8);
+    border-color: var(--color-primary, #111111);
+}
+
+/* Swiss Cards */
+.swiss-card {
+    background-color: var(--color-secondary, #FFFFFF);
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    border-radius: var(--radius-base, 0px);
+    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+.swiss-card:hover {
+    border-color: var(--color-primary, #111111);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Smooth motion */
+.fade-in-up {
+    animation: fadeInUp 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modern Responsive Enhancements */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+@media (pointer: coarse) {
+    button, a, input, select, textarea {
+        touch-action: manipulation;
+    }
+}
+
+/* Responsive Table & Code Wrappers */
+.prose table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-collapse: collapse;
+}
+
+.prose img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.prose pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Custom Minimalist Swiss Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.25);
+    border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(17, 17, 17, 0.6);
+}
+
+/* Utility to hide scrollbars while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
