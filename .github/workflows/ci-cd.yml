@@ -37,7 +37,9 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
 
       - name: Copy Environment File
-        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+        run: |
+          php -r "file_exists('.env') || copy('.env.example', '.env');"
+          sed -i 's/APP_ENV=production/APP_ENV=testing/' .env
 
       - name: Generate Application Key
         run: php artisan key:generate
@@ -56,7 +58,7 @@ jobs:
           SESSION_DRIVER: array
           MAIL_MAILER: array
           APP_ENV: testing
-        run: php artisan test --parallel 2>/dev/null || php artisan test
+        run: php artisan test
 
   # ─────────────────────────────────────────────
   # JOB 2: Build Frontend Assets
@@ -65,7 +67,7 @@ jobs:
     name: 🔨 Build Frontend Assets
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout Code
@@ -97,7 +99,7 @@ jobs:
     name: 🚀 Deploy to Production (FTP)
     runs-on: ubuntu-latest
     needs: [ test, build ]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
 
     steps:
       - name: Checkout Code
